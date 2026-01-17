@@ -3,1485 +3,553 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guía Interactiva de Asados al Barril</title>
-    <!-- Carga de Tailwind CSS -->
+    <title>Ahorro Flex - Plan de Ahorro Inteligente</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Carga de Inter Font -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- React & ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel para traducir JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Estilos Personalizados para Impresión y Scrollbars -->
     <style>
-        /* Estilos personalizados */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f7f3e8; /* Tono crema claro inspirado en el PDF */
-            color: #4a2d1f; /* Marrón oscuro para el texto */
-        }
-        .tab-button {
-            transition: all 0.3s ease;
-            border-bottom-width: 4px;
-            border-color: transparent;
-        }
-        .tab-button.active {
-            border-color: #d97706; /* Naranja/ámbar */
-            color: #d97706;
-            font-weight: 700;
-        }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .accordion-header {
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-        .accordion-header:hover {
-            background-color: #fffbf0;
-        }
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease-out;
-        }
-        .recipe-card {
-            background-color: #ffffff;
-            border: 1px solid #e0d9c4;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            /* ! Se añade para la lógica de filtrado/búsqueda */
-            display: block; 
-        }
-        .recipe-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03);
-        }
-        /* Estilos del Modal */
-        #recipe-modal {
-            display: none; /* Oculto por defecto */
-            position: fixed;
-            z-index: 50;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0, 0, 0, 0.6);
-            align-items: center;
-            justify-content: center;
-        }
-        #modal-content {
-            background-color: #fff;
-            margin: auto;
-            padding: 24px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 700px;
-            max-height: 90vh;
-            overflow-y: auto;
-            position: relative;
-            animation: slide-down 0.3s ease-out;
-        }
-        #modal-close {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            cursor: pointer;
-            font-size: 1.5rem;
-            line-height: 1;
-            color: #9ca3af;
-        }
-        #modal-close:hover {
-            color: #111827;
-        }
-        @keyframes slide-down {
-            from {
-                transform: translateY(-30px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-        ul, ol {
-            list-style-position: inside;
-        }
-        ul {
-            list-style-type: disc;
-        }
-        ol {
-            list-style-type: decimal;
-        }
-        /* Estilos para Filtros */
-        .filter-button {
-            background-color: #f3f4f6;
-            color: #4a2d1f;
-            padding: 8px 16px;
-            border-radius: 99px;
-            border: 1px solid #e0d9c4;
-            font-weight: 600;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .filter-button:hover {
-            background-color: #fffbf0;
-        }
-        .filter-button.active {
-            background-color: #d97706;
-            color: #ffffff;
-            border-color: #d97706;
-        }
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        .dark ::-webkit-scrollbar-thumb:hover { background: #64748b; }
 
-        /* ! INICIO: Nuevos Estilos (Búsqueda, Impresión, Nuevos Datos) */
-        #search-bar {
-            width: 100%;
-            padding: 10px 16px;
-            border: 2px solid #e0d9c4;
-            border-radius: 12px;
-            font-size: 1rem;
-            color: #4a2d1f;
-            background-color: #fffbf0;
-        }
-        #search-bar:focus {
-            outline: none;
-            border-color: #d97706;
-            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
-        }
-        /* ! INICIO: Nuevos Estilos (Orden, Favoritos, Tips) */
-        #sort-select {
-            padding: 10px 16px;
-            border: 2px solid #e0d9c4;
-            border-radius: 12px;
-            font-size: 1rem;
-            color: #4a2d1f;
-            background-color: #fffbf0;
-            width: 100%;
-        }
-        #sort-select:focus {
-            outline: none;
-            border-color: #d97706;
-            box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.2);
-        }
-        .favorite-btn {
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            font-size: 1.75rem; /* 28px */
-            cursor: pointer;
-            transition: transform 0.2s ease, color 0.2s ease;
-            color: rgba(255, 255, 255, 0.7); /* Blanco semitransparente */
-            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
-            z-index: 10;
-        }
-        .favorite-btn:hover {
-            transform: scale(1.15);
-        }
-        .favorite-btn.active {
-            color: #ef4444; /* Rojo */
-            transform: scale(1.1);
-        }
-        .recipe-card-image-container {
-            position: relative;
-        }
-        #modal-tips-content {
-            background-color: #fffbf0;
-            border-left: 4px solid #d97706;
-            padding: 16px;
-            border-radius: 8px;
-            margin-top: 16px;
-        }
-        /* ! FIN: Nuevos Estilos */
-        .card-details {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 16px 12px;
-            background-color: #fdfcf9;
-            border-top: 1px solid #f3f0e8;
-            font-size: 0.875rem;
-            color: #785a4b;
-        }
-        #modal-print-btn {
-            background-color: #d97706;
-            color: white;
-            font-weight: 600;
-            padding: 10px 16px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            margin-top: 24px;
-        }
-        #modal-print-btn:hover {
-            background-color: #b45f06;
-        }
-        /* Estilos de impresión */
+        /* Estilos de Impresión */
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            #print-area, #print-area * {
-                visibility: visible;
-            }
-            #print-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-            }
+            body * { visibility: hidden; }
+            .printable-area, .printable-area * { visibility: visible; }
+            .printable-area { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; }
+            .no-print { display: none !important; }
+            .print-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; font-size: 10px; font-family: sans-serif; }
+            .print-item { border: 1px solid #000; padding: 5px; text-align: center; border-radius: 4px; }
+            .print-header { text-align: center; margin-bottom: 20px; font-family: sans-serif; }
+            .print-item.paid { background-color: #ddd; text-decoration: line-through; }
         }
-        /* ! FIN: Nuevos Estilos */
 
+        /* Animaciones */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .animate-in { animation: fadeIn 0.3s ease-out; }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="bg-slate-50 text-slate-800 transition-colors duration-300">
+    <div id="root"></div>
 
-    <div class="container mx-auto max-w-6xl bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden border border-gray-200">
-        <!-- Cabecera -->
-        <header class="p-6 md:p-8 bg-cover bg-center" style="background-image: url('https://placehold.co/1200x300/8c5a40/f7f3e8?text=Asados+al+Barril');">
-            <!-- Título eliminado -->
-        </header>
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
 
-        <!-- Pestañas de Navegación -->
-        <nav class="flex border-b border-gray-300 bg-gray-50">
-            <button class="tab-button flex-1 py-4 px-6 text-lg font-semibold text-gray-800 active" data-tab="tecnicas">
-                Técnicas Esenciales
-            </button>
-            <button class="tab-button flex-1 py-4 px-6 text-lg font-semibold text-gray-800" data-tab="recetas">
-                Recetario Completo
-            </button>
-        </nav>
+        // --- ICONOS SVG (Componentes simples) ---
+        const Icon = ({ path, className }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {path}
+            </svg>
+        );
 
-        <!-- Contenido de Pestañas -->
-        <main class="p-6 md:p-8 pb-16">
+        const PiggyBank = (props) => <Icon {...props} path={<><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2.5 0-.8.3-2.4-.6-6-.5-.6-1.5-2.5-4.4-2.5z"/><path d="M16 9h.01"/><path d="M7 16h-.01"/></>} />;
+        const ArrowUpDown = (props) => <Icon {...props} path={<><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></>} />;
+        const CheckCircle2 = (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></>} />;
+        const Search = (props) => <Icon {...props} path={<><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></>} />;
+        const Moon = (props) => <Icon {...props} path={<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>} />;
+        const Sun = (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></>} />;
+        const Download = (props) => <Icon {...props} path={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></>} />;
+        const Upload = (props) => <Icon {...props} path={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></>} />;
+        const TrendingUp = (props) => <Icon {...props} path={<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>} />;
+        const TrendingDown = (props) => <Icon {...props} path={<polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/>} />;
+        const X = (props) => <Icon {...props} path={<><path d="M18 6 6 18"/><path d="m6 6 12 12"/></>} />;
+        const Hash = (props) => <Icon {...props} path={<><line x1="4" x2="20" y1="9" y2="9"/><line x1="4" x2="20" y1="15" y2="15"/><line x1="10" x2="8" y1="3" y2="21"/><line x1="16" x2="14" y1="3" y2="21"/></>} />;
+        const Printer = (props) => <Icon {...props} path={<><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></>} />;
+        const HelpCircle = (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></>} />;
+        const Trash2 = (props) => <Icon {...props} path={<><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></>} />;
+        const Pencil = (props) => <Icon {...props} path={<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>} />;
+        const AlertTriangle = (props) => <Icon {...props} path={<><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></>} />;
 
-            <!-- Pestaña de Técnicas -->
-            <section id="tecnicas-content" class="tab-content active space-y-4">
-                
-                <!-- Acordeón de Técnicas (Sin cambios) -->
-                <div class="accordion-item bg-white border border-gray-200 rounded-lg overflow-hidden">
-                    <h3 class="accordion-header flex justify-between items-center p-5">
-                        <span class="text-xl font-bold text-amber-700">Cap. 1: Fundamentos de los Asados al Barril</span>
-                        <span class="text-2xl font-light">+</span>
-                    </h3>
-                    <div class="accordion-content px-5 pb-5">
-                        <ul class="list-disc space-y-2 text-base">
-                            <li><strong>¿Qué son?</strong> Técnica culinaria de cocción lenta con calor indirecto y humo, que da un sabor ahumado y textura tierna.</li>
-                            <li><strong>Equipo Básico:</strong> Barril o parrilla, termómetro confiable, leña o carbón de calidad.</li>
-                            <li><strong>Preparación y Encendido:</strong>
-                                <ol class="list-decimal ml-6 mt-1">
-                                    <li>Limpiar el barril o parrilla de residuos.</li>
-                                    <li>Añadir leña o carbón y encender. Dejar que se desarrollen las brasas.</li>
-                                    <li>Ajustar la temperatura usando las ventilas para controlar el calor.</li>
-                                </ol>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+        // --- UTILIDADES ---
+        const EXCHANGE_RATES = { COP: 1, USD: 4100, EUR: 4450 };
+        const DEFAULT_MOMENTS = 365;
 
-                <div class="accordion-item bg-white border border-gray-200 rounded-lg overflow-hidden">
-                    <h3 class="accordion-header flex justify-between items-center p-5">
-                        <span class="text-xl font-bold text-amber-700">Cap. 2: Selección y Preparación de la Carne</span>
-                        <span class="text-2xl font-light">+</span>
-                    </h3>
-                    <div class="accordion-content px-5 pb-5">
-                        <ul class="list-disc space-y-2 text-base">
-                            <li><strong>Marmoleo:</strong> Busca vetas de grasa intramuscular (8-12% ideal) para sabor y jugosidad. Presente en Ribeye, filete de lomo, brisket.</li>
-                            <li><strong>Frescura:</strong> Compra en proveedores de confianza. Opta por carne local y de pasto si es posible.</li>
-                            <li><strong>Cortes Populares (Gramaje por persona):</strong>
-                                <ul class="list-disc ml-6 mt-1">
-                                    <li><strong>Costillar de Cerdo:</strong> 500g - 1kg. Clásico y jugoso.</li>
-                                    <li><strong>Brisket de Res:</strong> 200g - 300g. Sabor ahumado intenso, textura tierna.</li>
-                                    <li><strong>Pechuga de Pollo:</strong> 150g - 200g. Magra y versátil, absorbe bien sabores.</li>
-                                    <li><strong>Lomo de Cerdo:</strong> 200g - 250g. Magro y tierno, ideal para personalizar.</li>
-                                    <li><strong>Muslos de Pollo:</strong> 2 muslos (150g-200g total). Jugosos y con más grasa.</li>
-                                    <li><strong>Costillas de Cordero:</strong> 200g - 250g. Tiernas y con sabor característico.</li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+        const formatMoney = (amount, currency = 'COP') => {
+            const value = amount / EXCHANGE_RATES[currency];
+            return new Intl.NumberFormat(currency === 'COP' ? 'es-CO' : 'en-US', {
+                style: 'currency',
+                currency: currency,
+                minimumFractionDigits: currency === 'COP' ? 0 : 2,
+                maximumFractionDigits: currency === 'COP' ? 0 : 2,
+            }).format(value);
+        };
 
-                <div class="accordion-item bg-white border border-gray-200 rounded-lg overflow-hidden">
-                    <h3 class="accordion-header flex justify-between items-center p-5">
-                        <span class="text-xl font-bold text-amber-700">Cap. 3: Marinados y Adobos</span>
-                        <span class="text-2xl font-light">+</span>
-                    </h3>
-                    <div class="accordion-content px-5 pb-5">
-                        <p class="mb-4">Técnicas para infundir sabor y ablandar la carne antes de la cocción.</p>
-                        <h4 class="font-bold text-lg mb-2">Marinados (Líquidos)</h4>
-                        <ul class="list-disc space-y-2 mb-4">
-                            <li><strong>De Hierbas y Cítricos:</strong> Jugo de limón, aceite de oliva, romero, tomillo, ajo. (Marinar 2-4 horas).</li>
-                            <li><strong>De Cerveza y Mostaza:</strong> Cerveza (Ale), salsa de soja, mostaza Dijon, ajo, azúcar moreno. (Marinar 4-6 horas).</li>
-                        </ul>
-                        <h4 class="font-bold text-lg mb-2">Adobos (Pastas/Mezclas secas)</h4>
-                        <ul class="list-disc space-y-2">
-                            <li><strong>De Chile y Ajo:</strong> Chiles secos (guajillo, ancho), ajo, aceite de oliva, comino, orégano. Se licúa hasta formar una pasta.</li>
-                            <li><strong>De Yogur y Hierbas:</strong> Yogur natural, menta, cilantro, comino, paprika. Reposar 2 horas.</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="accordion-item bg-white border border-gray-200 rounded-lg overflow-hidden">
-                    <h3 class="accordion-header flex justify-between items-center p-5">
-                        <span class="text-xl font-bold text-amber-700">Cap. 4: Técnicas de Cocina</span>
-                        <span class="text-2xl font-light">+</span>
-                    </h3>
-                    <div class="accordion-content px-5 pb-5">
-                        <ul class="list-disc space-y-4 text-base">
-                            <li><strong>Control de Temperatura:</strong>
-                                <ul class="list-disc ml-6 mt-1 space-y-2">
-                                    <li><strong>Zonas de Calor:</strong> Crear una zona directa (sobre brasas, para sellar) y una indirecta (lejos de brasas, para cocción lenta y ahumado).</li>
-                                    <li><strong>Medición:</strong> Usar un termómetro confiable. Ajustar temperatura con las ventilas (más abiertas = más calor).</li>
-                                    <li><strong>Temperaturas Internas Objetivo:</strong>
-                                        <ul class="list-disc ml-6 mt-1">
-                                            <li>Costillar de Cerdo: 63-71°C</li>
-                                            <li>Brisket de Res: 88-93°C</li>
-                                            <li>Pechuga de Pollo: 74-79°C</li>
-                                        </ul>
-                                    </li>
-                                </ul>
-                            </li>
-                            <li><strong>Cocción Lenta (Indirecta):</strong>
-                                <ul class="list-disc ml-6 mt-1 space-y-2">
-                                    <li><strong>Definición:</strong> La carne se coloca lejos del fuego directo. Es la técnica principal para asados al barril (BBQ).</li>
-                                    <li><strong>Uso:</strong> Perfecta para piezas grandes que requieren tiempos largos (ej. brisket 10-12 horas a 107-121°C). Logra la textura tierna y desmenuzable.</li>
-                                    <li><strong>Humedad:</strong> Colocar recipientes con agua en el barril para evitar que la carne se seque.</li>
-                                    <li><strong>Rotación:</strong> Girar y voltear la carne (especialmente piezas grandes) para cocción uniforme.</li>
-                                </ul>
-                            </li>
-                            <li><strong>Cocción Rápida (Directa / Sellado):</strong>
-                                <ul class="list-disc ml-6 mt-1 space-y-2">
-                                    <li><strong>Definición:</strong> La carne se coloca directamente sobre las brasas calientes.</li>
-                                    <li><strong>Uso:</strong> Ideal para sellar la carne, crear una costra (reacción de Maillard) y cocinar cortes más delgados.</li>
-                                    <li><strong>Tiempos Cortos:</strong> Se usa para filetes (3-5 min por lado), costillas de cordero (3-4 min por lado) o para dorar la carne antes de pasarla a cocción indirecta.</li>
-                                </ul>
-                            </li>
-                            <li><strong>Sabor Ahumado Perfecto:</strong>
-                                <ul class="list-disc ml-6 mt-1 space-y-2">
-                                    <li><strong>Selección de Madera:</strong> Nogal (suave), Manzano (frutal), Nogal Americano (fuerte), Mezquite (intenso).</li>
-                                    <li><strong>Remojo:</strong> Remojar la madera 30 min antes para un humo más limpio.</li>
-                                    <li><strong>Control del Humo:</strong> Evitar humo denso (da sabor amargo). Usar ventilas.</li>
-                                    <li><strong>Tiempo y Temperatura:</strong> Ahumar entre 107-121°C. (ej. Costillar 2-4 horas, Brisket 4-6 horas).</li>
-                                </ul>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+        const roundTo100 = (num) => Math.round(num / 100) * 100;
 
-                <div class="accordion-item bg-white border border-gray-200 rounded-lg overflow-hidden">
-                    <h3 class="accordion-header flex justify-between items-center p-5">
-                        <span class="text-xl font-bold text-amber-700">Cap. 7: Servicio y Presentación</span>
-                        <span class="text-2xl font-light">+</span>
-                    </h3>
-                    <div class="accordion-content px-5 pb-5">
-                        <ul class="list-disc space-y-2 text-base">
-                            <li><strong>Primera Impresión:</strong> Usar vajilla limpia. Combinar colores y contrastes de los alimentos.</li>
-                            <li><strong>Decoración:</strong> Usar elementos frescos como hierbas (albahaca, perejil) o rodajas de limón.</li>
-                            <li><strong>Salsas y Aderezos:</strong> Servir en recipientes decorativos. Experimentar con salsas caseras.</li>
-                            <li><strong>Acompañamientos:</strong> Combinar texturas (crujientes y suaves) y colores.</li>
-                            <li><strong>Servicio:</strong> Mantener platos calientes. Informar la temperatura de la carne. Ser amable y atento.</li>
-                        </ul>
-                    </div>
-                </div>
-            </section>
+        // --- ALGORITMO GENERADOR ---
+        const generateDataForTarget = (targetAmount, totalMoments) => {
+            const safeTarget = roundTo100(targetAmount || 0);
+            const safeMoments = totalMoments || 1;
+            
+            if (safeTarget <= 0) return [];
 
-            <!-- Pestaña de Recetas -->
-            <section id="recetas-content" class="tab-content">
-                
-                <!-- ! INICIO: Controles de Búsqueda y Filtro -->
-                <div class="mb-8 space-y-4">
-                    <!-- Barra de Búsqueda -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label for="search-bar" class="block text-sm font-semibold mb-2">Buscar Receta:</label>
-                            <input type="text" id="search-bar" placeholder="Ej: Costillar, Brisket, Papas...">
-                        </div>
-                        <!-- ! INICIO: Opciones de Ordenar -->
-                        <div>
-                            <label for="sort-select" class="block text-sm font-semibold mb-2">Ordenar por:</label>
-                            <select id="sort-select">
-                                <option value="default">Relevancia</option>
-                                <option value="time-asc">Tiempo (más rápido primero)</option>
-                                <option value="time-desc">Tiempo (más lento primero)</option>
-                                <option value="difficulty-asc">Dificultad (más fácil primero)</option>
-                                <option value="difficulty-desc">Dificultad (más difícil primero)</option>
-                                <option value="name-asc">Nombre (A-Z)</option>
-                                <option value="name-desc">Nombre (Z-A)</option>
-                            </select>
-                        </div>
-                        <!-- ! FIN: Opciones de Ordenar -->
-                    </div>
-                    
-                    <!-- Contenedor de Filtros -->
-                    <div id="filter-container" class="flex flex-wrap gap-2">
-                        <button class="filter-button active" data-filter="todos">Ver Todo</button>
-                        <!-- ! INICIO: Botón de Favoritos -->
-                        <button class="filter-button" data-filter="favoritos">❤️ Favoritos</button>
-                        <!-- ! FIN: Botón de Favoritos -->
-                        <button class="filter-button" data-filter="cerdo">🐖 Cerdo</button>
-                        <button class="filter-button" data-filter="res">🐄 Res</button>
-                        <button class="filter-button" data-filter="pollo">🐓 Pollo</button>
-                        <button class="filter-button" data-filter="cordero">🐑 Cordero</button>
-                        <button class="filter-button" data-filter="pavo">🦃 Pavo</button>
-                        <button class="filter-button" data-filter="pescado">🐟 Pescado</button>
-                        <button class="filter-button" data-filter="acompanamiento">🥗 Acompañamiento</button>
-                    </div>
-                </div>
-                <!-- ! FIN: Controles de Búsqueda y Filtro -->
+            const average = safeTarget / safeMoments;
+            
+            let minVal = Math.max(100, roundTo100(average * 0.05));
+            let maxVal = roundTo100(average * 1.95);
 
-                <!-- Platos Principales -->
-                <h2 id="header-principales" class="text-3xl font-bold text-amber-800 mb-6 border-b-2 border-amber-300 pb-2">Platos Principales (Cap. 5)</h2>
-                <!-- ! CONTENEDOR VACÍO: Las tarjetas se generarán aquí -->
-                <div id="grid-principales" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Las tarjetas de recetas principales se inyectarán aquí dinámicamente -->
-                </div>
+            if (average < 200) { minVal = 100; maxVal = 300; }
 
-                <!-- Acompañamientos y Salsas -->
-                <h2 id="header-acompanamientos" class="text-3xl font-bold text-amber-800 mt-12 mb-6 border-b-2 border-amber-300 pb-2">Acompañamientos y Salsas (Cap. 6)</h2>
-                <!-- ! CONTENEDOR VACÍO: Las tarjetas se generarán aquí -->
-                <div id="grid-acompanamientos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Las tarjetas de recetas de acompañamiento se inyectarán aquí dinámicamente -->
-                </div>
-
-                <!-- Mensaje de no resultados -->
-                <p id="no-results" class="text-center text-gray-500 text-lg mt-10" style="display: none;">No se encontraron recetas que coincidan con tu búsqueda.</p>
-
-            </section>
-        </main>
-
-        <!-- Footer con Créditos -->
-        <footer class="p-6 text-center text-sm text-gray-500 border-t border-gray-300 bg-gray-50">
-            <p>Créditos: Juan Miguel Rios Redondo</p>
-        </footer>
-
-    </div>
-
-    <!-- Modal para Recetas -->
-    <div id="recipe-modal">
-        <div id="modal-content">
-            <span id="modal-close">&times;</span>
-            <h2 id="modal-title" class="text-3xl font-bold mb-4 text-amber-800"></h2>
-            <!-- ! Contenedor para el área imprimible -->
-            <div id="modal-body-printable">
-                <div id="modal-body" class="space-y-4 text-base">
-                    <!-- El contenido de la receta se inyectará aquí -->
-                </div>
-                <!-- ! INICIO: Contenedor de Tips -->
-                <div id="modal-tips-content" class="hidden">
-                    <h3 class="font-bold text-xl mb-3 text-amber-800">💡 Consejos del Asador</h3>
-                    <p id="modal-tips-text" class="text-base"></p>
-                </div>
-                <!-- ! FIN: Contenedor de Tips -->
-            </div>
-            <!-- ! Botón de Imprimir -->
-            <button id="modal-print-btn">Imprimir Receta</button>
-        </div>
-    </div>
-
-
-    <!-- ! INICIO: Base de datos de recetas en JSON y Lógica de la App -->
-    <script>
-        // --- INICIO: Base de Datos de Recetas (JSON) ---
-        // ! REFACTORIZADO: 'content' se ha dividido en 'ingredients' (objetos) e 'instructions' (strings).
-        const recipeData = [
-            // --- PLATOS PRINCIPALES ---
-            {
-                id: 'receta-costillar-clasico',
-                title: 'Costillar de Cerdo con Sazonado Clásico',
-                category: 'cerdo',
-                image: 'https://placehold.co/400x200/c27a42/ffffff?text=Costillar+de+Cerdo',
-                time: '3-4 horas',
-                timeMinutes: 210,
-                difficulty: 'Media',
-                difficultyValue: 2,
-                ingredients: [
-                    { amount: "1", unit: "", name: "costillar de cerdo (aprox. 2 kg)." },
-                    { amount: "", unit: "", name: "Sazonado Clásico (Cap. 2):", isSubheader: true },
-                    { amount: "2", unit: "cdas", name: "de sal", isSubItem: true },
-                    { amount: "2", unit: "cdas", name: "de pimienta negra", isSubItem: true },
-                    { amount: "1", unit: "cda", name: "de paprika", isSubItem: true },
-                    { amount: "1", unit: "cda", name: "de azúcar moreno", isSubItem: true },
-                    { amount: "1", unit: "cdta", name: "de ajo en polvo", isSubItem: true },
-                    { amount: "1", unit: "cdta", name: "de cebolla en polvo", isSubItem: true }
-                ],
-                instructions: [
-                    "Lava y seca el costillar.",
-                    "Aplica generosamente el sazonado clásico por toda la superficie.",
-                    "Precalienta el barril a 121°C.",
-                    "Coloca el costillar en la zona indirecta.",
-                    "Cocina por 3-4 horas, manteniendo la temperatura y añadiendo madera de nogal para ahumar.",
-                    "Verifica que la temperatura interna alcance los 71°C.",
-                    "Retira, deja reposar 15 minutos y corta."
-                ],
-                tips: 'Para una costra más sabrosa, puedes rociar el costillar con jugo de manzana cada 45 minutos durante la cocción.'
-            },
-            {
-                id: 'receta-brisket',
-                title: 'Brisket de Res Ahumado',
-                category: 'res',
-                image: 'https://placehold.co/400x200/a15c38/ffffff?text=Brisket+de+Res',
-                time: '10-12 horas',
-                timeMinutes: 660,
-                difficulty: 'Difícil',
-                difficultyValue: 3,
-                ingredients: [
-                    { amount: "1", unit: "", name: "brisket de res (4-5 kg)." },
-                    { amount: "", unit: "", name: "Sazonado Ahumado (Cap. 2):", isSubheader: true },
-                    { amount: "3", unit: "cdas", name: "de sal ahumada", isSubItem: true },
-                    { amount: "2", unit: "cdas", name: "de pimienta negra", isSubItem: true },
-                    { amount: "1", unit: "cda", name: "de pimentón ahumado", isSubItem: true },
-                    { amount: "1", unit: "cda", name: "de ajo en polvo", isSubItem: true },
-                    { amount: "1", unit: "cda", name: "de cebolla en polvo", isSubItem: true }
-                ],
-                instructions: [
-                    "Lava y seca el brisket.",
-                    "Aplica el sazonado ahumado por todas las superficies.",
-                    "Precalienta el barril a 107°C.",
-                    "Coloca el brisket en la zona indirecta, con la grasa hacia arriba.",
-                    "Cocina por 10-12 horas, manteniendo la temperatura y añadiendo madera de nogal para ahumar.",
-                    "Verifica que la temperatura interna alcance los 88-93°C.",
-                    "Retira, envuelve en papel aluminio y deja reposar 30 minutos antes de cortar."
-                ],
-                tips: 'La paciencia es clave. No subas el fuego. Para atravesar el "estancamiento" (stall) alrededor de los 70°C, puedes envolver el brisket en papel de estraza (butcher paper).'
-            },
-            {
-                id: 'receta-pollo-citricos',
-                title: 'Pollo Asado con Marinado de Hierbas y Cítricos',
-                category: 'pollo',
-                image: 'https://placehold.co/400x200/facc15/4a2d1f?text=Pollo+Asado',
-                time: '1.5-2 horas',
-                timeMinutes: 105,
-                difficulty: 'Fácil',
-                difficultyValue: 1,
-                ingredients: [
-                    { amount: "1", unit: "", name: "pollo entero (aprox. 2 kg)." },
-                    { amount: "", unit: "", name: "Marinado de Hierbas y Cítricos (Cap. 3):", isSubheader: true },
-                    { amount: "1/2", unit: "taza", name: "de jugo de limón fresco", isSubItem: true },
-                    { amount: "1/4", unit: "taza", name: "de aceite de oliva", isSubItem: true },
-                    { amount: "2", unit: "cdas", name: "de romero fresco picado", isSubItem: true },
-                    { amount: "2", unit: "cdas", name: "de tomillo fresco picado", isSubItem: true },
-                    { amount: "3", unit: "", name: "dientes de ajo picados", isSubItem: true },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto", isSubItem: true }
-                ],
-                instructions: [
-                    "Lava y seca el pollo.",
-                    "Prepara el marinado.",
-                    "Coloca el pollo y el marinado en una bolsa o recipiente. Refrigera por 2-4 horas.",
-                    "Precalienta el barril a 177°C.",
-                    "Coloca el pollo en la zona indirecta y cocina por 1-1.5 horas, volteando ocasionalmente.",
-                    "Verifica que la temperatura interna alcance los 74-79°C en la parte más gruesa.",
-                    "Retira y deja reposar 10 minutos antes de cortar."
-                ],
-                tips: 'Para una piel extra crujiente, seca muy bien el pollo con papel de cocina antes de marinarlo (especialmente si el marinado no es a base de aceite).'
-            },
-            {
-                id: 'receta-cordero-menta',
-                title: 'Costillas de Cordero con Salsa de Menta',
-                category: 'cordero',
-                image: 'https://placehold.co/400x200/8c7a6b/ffffff?text=Costillas+de+Cordero',
-                time: '20-30 min',
-                timeMinutes: 25,
-                difficulty: 'Media',
-                difficultyValue: 2,
-                ingredients: [
-                    { amount: "2", unit: "", name: "costillas de cordero (aprox. 200-250 g c/u)." },
-                    { amount: "", unit: "", name: "Salsa de Menta (Basada en Adobo de Yogur y Hierbas Cap. 3):", isSubheader: true },
-                    { amount: "1", unit: "taza", name: "de yogur natural", isSubItem: true },
-                    { amount: "2", unit: "cdas", name: "de menta fresca picada", isSubItem: true },
-                    { amount: "2", unit: "cdas", name: "de cilantro fresco picado", isSubItem: true },
-                    { amount: "1", unit: "cdta", name: "de comino molido", isSubItem: true },
-                    { amount: "1", unit: "cdta", name: "de paprika", isSubItem: true },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto", isSubItem: true }
-                ],
-                instructions: [
-                    "Lava y seca las costillas.",
-                    "Prepara la salsa/adobo de menta.",
-                    "Aplica una capa generosa sobre las costillas y marina por al menos 30 minutos.",
-                    "Precalienta el barril a 177°C.",
-                    "Coloca las costillas en la zona directa y cocina 3-4 minutos por lado (para dorar).",
-                    "Mueve a la zona indirecta y continúa cocinando 8-10 minutos, volteando y cepillando con más salsa.",
-                    "Verifica que la temperatura interna alcance los 63-71°C (punto medio).",
-                    "Sirve con más salsa por encima."
-                ],
-                tips: 'El cordero se cocina rápido. No lo cocines en exceso. El punto medio (rosa por dentro) es ideal para mantener su jugosidad.'
-            },
-            {
-                id: 'receta-pavo-arce',
-                title: 'Pechuga de Pavo Ahumada con Glaseado de Arce y Mostaza',
-                category: 'pavo',
-                image: 'https://placehold.co/400x200/d4a373/ffffff?text=Pechuga+de+Pavo',
-                time: '2-3 horas',
-                timeMinutes: 150,
-                difficulty: 'Media',
-                difficultyValue: 2,
-                ingredients: [
-                    { amount: "1", unit: "", name: "pechuga de pavo (aprox. 2 kg)." },
-                    { amount: "", unit: "", name: "Glaseado de Arce y Mostaza:", isSubheader: true },
-                    { amount: "1/2", unit: "taza", name: "de sirope de arce", isSubItem: true },
-                    { amount: "1/4", unit: "taza", name: "de mostaza Dijon", isSubItem: true },
-                    { amount: "1", unit: "cda", name: "de aceite de oliva", isSubItem: true },
-                    { amount: "1", unit: "cdta", name: "de paprika", isSubItem: true },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto", isSubItem: true }
-                ],
-                instructions: [
-                    "Lava y seca la pechuga de pavo.",
-                    "Prepara el glaseado mezclando los ingredientes.",
-                    "Aplica el glaseado sobre la pechuga uniformemente.",
-                    "Precalienta el barril a 149°C.",
-                    "Coloca la pechuga en la zona indirecta.",
-                    "Cocina por 2-3 horas, aplicando más glaseado regularmente.",
-                    "Verifica que la temperatura interna alcance los 74-79°C.",
-                    "Retira, deja reposar 10 minutos y rebana."
-                ],
-                tips: 'El pavo tiende a secarse. Usar un marinado o salmuera antes de glasear puede ayudar a mantenerlo jugoso. No cocines de más.'
-            },
-            {
-                id: 'receta-costillas-miel-mostaza',
-                title: 'Costillas de Cerdo con Glaseado de Miel y Mostaza',
-                category: 'cerdo',
-                image: 'https://placehold.co/400x200/e6b980/4a2d1f?text=Costillas+Miel+Mostaza',
-                time: '2-3 horas',
-                timeMinutes: 150,
-                difficulty: 'Media',
-                difficultyValue: 2,
-                ingredients: [
-                    { amount: "2", unit: "racks", name: "de costillas de cerdo (aprox. 1.5 kg c/u)." },
-                    { amount: "1/2", unit: "taza", name: "de miel." },
-                    { amount: "1/4", unit: "taza", name: "de mostaza Dijon." },
-                    { amount: "2", unit: "cdas", name: "de salsa de soja." },
-                    { amount: "2", unit: "cdta", name: "de pimentón ahumado." },
-                    { amount: "1", unit: "cdta", name: "de ajo en polvo." },
-                    { amount: "1", unit: "cdta", name: "de cebolla en polvo." },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto." }
-                ],
-                instructions: [
-                    "Lava y seca las costillas.",
-                    "Mezcla miel, mostaza, soja, pimentón, ajo en polvo y cebolla en polvo para el glaseado.",
-                    "Aplica una capa generosa de glaseado y sazona con sal y pimienta.",
-                    "Precalienta el barril a 149°C.",
-                    "Coloca las costillas en la zona indirecta y cocina 2-3 horas, volteando y aplicando más glaseado cada 30 minutos.",
-                    "Verifica que la temperatura interna alcance los 71°C.",
-                    "Retira, corta y sirve con más glaseado."
-                ],
-                tips: 'Aplica el glaseado (que contiene azúcar/miel) solo durante los últimos 30-45 minutos de cocción para evitar que se queme.'
-            },
-            {
-                id: 'receta-costillas-coreanas',
-                title: 'Costillas de Cerdo Coreanas a la Parrilla',
-                category: 'cerdo',
-                image: 'https://placehold.co/400x200/bf4e30/ffffff?text=Costillas+Coreanas',
-                time: '1.5-2 horas',
-                timeMinutes: 105,
-                difficulty: 'Media',
-                difficultyValue: 2,
-                ingredients: [
-                    { amount: "2", unit: "racks", name: "de costillas de cerdo (aprox. 1.5 kg c/u)." },
-                    { amount: "1/2", unit: "taza", name: "de salsa de soja." },
-                    { amount: "1/4", unit: "taza", name: "de azúcar moreno." },
-                    { amount: "2", unit: "cdas", name: "de aceite de sésamo." },
-                    { amount: "2", unit: "cdas", name: "de cebolla verde picada." },
-                    { amount: "2", unit: "", name: "dientes de ajo picados." },
-                    { amount: "1", unit: "cdta", name: "de jengibre fresco rallado." },
-                    { amount: "1/2", unit: "cdta", name: "de pimienta negra." },
-                    { amount: "", unit: "", name: "Semillas de sésamo tostado para decorar." }
-                ],
-                instructions: [
-                    "Lava y seca las costillas.",
-                    "Mezcla soja, azúcar, aceite de sésamo, cebolla verde, ajo, jengibre y pimienta para el marinado.",
-                    "Marina las costillas en refrigeración por al menos 4 horas o toda la noche.",
-                    "Precalienta el barril a 177°C.",
-                    "Coloca las costillas en la zona indirecta y cocina 1-1.5 horas, volteando y aplicando más marinado cada 20 minutos.",
-                    "Verifica que la temperatura interna alcance los 71°C.",
-                    "Retira, espolvorea con semillas de sésamo y sirve."
-                ],
-                tips: 'Para un sabor más intenso, ralla un poco de pera asiática en el marinado. Las enzimas de la pera ayudan a ablandar la carne.'
-            },
-            {
-                id: 'receta-costillas-ciruela',
-                title: 'Costillas de Cerdo con Salsa de Ciruela',
-                category: 'cerdo',
-                image: 'https://placehold.co/400x200/805060/ffffff?text=Costillas+con+Ciruela',
-                time: '2-2.5 horas',
-                timeMinutes: 135,
-                difficulty: 'Media',
-                difficultyValue: 2,
-                ingredients: [
-                    { amount: "2", unit: "racks", name: "de costillas de cerdo (aprox. 1.5 kg c/u)." },
-                    { amount: "1", unit: "taza", name: "de salsa de ciruela." },
-                    { amount: "1/4", unit: "taza", name: "de salsa de soja." },
-                    { amount: "2", unit: "cdas", name: "de miel." },
-                    { amount: "2", unit: "cdta", name: "de jengibre fresco rallado." },
-                    { amount: "1", unit: "cdta", name: "de ajo picado." },
-                    { amount: "1/2", unit: "cdta", name: "de pimienta roja triturada (opcional)." }
-                ],
-                instructions: [
-                    "Lava y seca las costillas.",
-                    "Mezcla salsa de ciruela, soja, miel, jengibre, ajo y pimienta roja (si se usa).",
-                    "Aplica la mezcla sobre las costillas y marina al menos 1 hora en refrigeración.",
-                    "Precalienta el barril a 149°C.",
-                    "Coloca las costillas en la zona indirecta y cocina 2-2.5 horas, volteando y aplicando más salsa cada 30 minutos.",
-                    "Verifica que la temperatura interna alcance los 71°C.",
-                    "Retira, corta y sirve con más salsa."
-                ],
-                tips: 'La salsa de ciruela (a menudo usada en cocina asiática) puede ser espesa. Puedes aligerarla con un chorrito de vinagre de arroz.'
-            },
-            {
-                id: 'receta-chicharron-crujiente',
-                title: 'Chicharrón al Barril Crujiente',
-                category: 'cerdo',
-                image: 'https://placehold.co/400x200/e6c9a1/4a2d1f?text=Chicharrón+Crujiente',
-                time: '1-2 horas',
-                timeMinutes: 90,
-                difficulty: 'Media',
-                difficultyValue: 2,
-                ingredients: [
-                    { amount: "1", unit: "kg", name: "de piel de cerdo, cortada en trozos pequeños." },
-                    { amount: "2", unit: "cdas", name: "de sal gruesa." },
-                    { amount: "1", unit: "cdta", name: "de pimienta negra molida." },
-                    { amount: "1", unit: "cdta", name: "de pimentón ahumado." },
-                    { amount: "", unit: "", name: "Aceite vegetal para freír." }
-                ],
-                instructions: [
-                    "Lava y seca cuidadosamente la piel de cerdo.",
-                    "Mezcla sal, pimienta y pimentón ahumado.",
-                    "Espolvorea y frota las especias sobre la piel.",
-                    "Precalienta el barril a 177°C.",
-                    "Coloca la piel en la zona indirecta y cocina 1-2 horas hasta que esté crujiente y dorada, girando ocasionalmente.",
-                    "Retira y escurre sobre papel absorbente.",
-                    "Calienta aceite vegetal en una sartén grande a 180°C.",
-                    "Fríe los chicharrones 1-2 minutos hasta que estén completamente crujientes.",
-                    "Escurre el exceso de aceite y sirve caliente."
-                ],
-                tips: 'El secreto del chicharrón es que la piel esté MUY seca. Déjala secar en la nevera sin tapar durante unas horas antes de cocinarla.'
-            },
-            {
-                id: 'receta-chicharron-limon',
-                title: 'Chicharrón al Barril con Sabor a Limón y Chile',
-                category: 'cerdo',
-                image: 'https://placehold.co/400x200/f5d576/4a2d1f?text=Chicharrón+Limón+y+Chile',
-                time: '1-2 horas',
-                timeMinutes: 90,
-                difficulty: 'Media',
-                difficultyValue: 2,
-                ingredients: [
-                    { amount: "1", unit: "kg", name: "de piel de cerdo, cortada en tiras delgadas." },
-                    { amount: "2", unit: "", name: "limones (jugo y ralladura)." },
-                    { amount: "2", unit: "cdas", name: "de sal." },
-                    { amount: "1", unit: "cda", name: "de chile en polvo." },
-                    { amount: "1", unit: "cdta", name: "de ajo en polvo." },
-                    { amount: "1", unit: "cdta", name: "de comino molido." },
-                    { amount: "", unit: "", name: "Aceite vegetal para freír." }
-                ],
-                instructions: [
-                    "Lava y seca las tiras de piel.",
-                    "Mezcla jugo y ralladura de limón, sal, chile en polvo, ajo en polvo y comino.",
-                    "Marina la piel en la mezcla por al menos 30 minutos en refrigeración.",
-                    "Precalienta el barril a 177°C.",
-                    "Coloca las tiras en la zona indirecta y cocina 1-2 horas hasta que estén crujientes y doradas, girando ocasionalmente.",
-                    "Retira y escurre sobre papel absorbente.",
-                    "Calienta aceite vegetal a 180°C.",
-                    "Fríe los chicharrones 1-2 minutos hasta que estén completamente crujientes.",
-                    "Escurre el exceso de aceite y sirve caliente con rodajas de limón."
-                ],
-                tips: 'No añadas la ralladura de limón hasta el final (después de freír) para un sabor a limón más fresco, ya que puede quemarse.'
-            },
-            {
-                id: 'receta-pescado-limon',
-                title: 'Pescado al Barril con Salsa de Hierbas y Limón',
-                category: 'pescado',
-                image: 'https://placehold.co/400x200/bde0fe/4a2d1f?text=Pescado+al+Barril',
-                time: '15-20 min',
-                timeMinutes: 18,
-                difficulty: 'Fácil',
-                difficultyValue: 1,
-                ingredients: [
-                    { amount: "4", unit: "filetes", name: "de pescado (aprox. 150 g c/u), como lubina o trucha." },
-                    { amount: "2", unit: "", name: "limones (jugo y ralladura)." },
-                    { amount: "3", unit: "cdas", name: "de aceite de oliva." },
-                    { amount: "2", unit: "", name: "dientes de ajo, picados." },
-                    { amount: "2", unit: "cdas", name: "de perejil fresco picado." },
-                    { amount: "1", unit: "cdta", name: "de tomillo fresco." },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto." }
-                ],
-                instructions: [
-                    "Mezcla jugo y ralladura de limón, aceite de oliva, ajo, perejil, tomillo, sal y pimienta.",
-                    "Coloca los filetes en una bandeja y vierte la mezcla sobre ellos. Marina 30 minutos en refrigeración.",
-                    "Precalienta el barril a 177°C.",
-                    "Coloca los filetes en la zona indirecta y cocina 8-10 minutos, volteando una vez, hasta que estén tiernos.",
-                    "Sirve con un poco de la salsa por encima."
-                ],
-                tips: 'El pescado se cocina muy rápido. Estará listo cuando se desmenuce fácilmente con un tenedor. No lo dejes ni un minuto de más.'
-            },
-            {
-                id: 'receta-pescado-mantequilla',
-                title: 'Pescado al Barril con Salsa de Mantequilla y Hierbas',
-                category: 'pescado',
-                image: 'https://placehold.co/400x200/cddfa0/4a2d1f?text=Pescado+con+Mantequilla',
-                time: '15-20 min',
-                timeMinutes: 18,
-                difficulty: 'Fácil',
-                difficultyValue: 1,
-                ingredients: [
-                    { amount: "4", unit: "filetes", name: "de pescado (aprox. 150 g c/u), como salmón o trucha." },
-                    { amount: "1/2", unit: "taza", name: "(115 g) de mantequilla derretida." },
-                    { amount: "2", unit: "cdas", name: "de perejil fresco picado." },
-                    { amount: "2", unit: "cdas", name: "de cilantro fresco picado." },
-                    { amount: "1", unit: "cda", name: "de estragón fresco picado." },
-                    { amount: "2", unit: "cdta", name: "de jugo de limón." },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto." }
-                ],
-                instructions: [
-                    "Mezcla mantequilla derretida, perejil, cilantro, estragón, jugo de limón, sal y pimienta.",
-                    "Coloca los filetes en una bandeja y vierte la mezcla sobre ellos. Marina 30 minutos en refrigeración.",
-                    "Precalienta el barril a 177°C.",
-                    "Coloca los filetes en la zona indirecta y cocina 8-10 minutos, volteando una vez, hasta que estén tiernos.",
-                    "Sirve con un poco de la salsa por encima."
-                ],
-                tips: 'Para salmón, considera cocinarlo sobre una tabla de cedro (remojada previamente) en la parrilla para un sabor ahumado extra.'
-            },
-            // --- ACOMPAÑAMIENTOS ---
-            {
-                id: 'receta-pure-ahumado',
-                title: 'Puré de Papas Ahumadas',
-                category: 'acompanamiento',
-                image: 'https://placehold.co/400x200/f0e6d2/4a2d1f?text=Puré+de+Papas+Ahumado',
-                time: '45 min',
-                timeMinutes: 45,
-                difficulty: 'Fácil',
-                difficultyValue: 1,
-                ingredients: [
-                    { amount: "4", unit: "", name: "papas grandes, peladas y en cubos." },
-                    { amount: "1/2", unit: "taza", name: "de leche caliente." },
-                    { amount: "2", unit: "cdas", name: "de mantequilla." },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto." }
-                ],
-                instructions: [
-                    "Cocina las papas en agua con sal hasta que estén tiernas. Escúrrelas.",
-                    "Precalienta el barril a baja temperatura y agrega astillas de madera de manzana.",
-                    "Coloca las papas en una fuente resistente al fuego y ahúmalas en el barril por 15-20 minutos, revolviendo ocasionalmente.",
-                    "Haz un puré con las papas ahumadas, agregando leche caliente, mantequilla, sal y pimienta. Mezcla hasta obtener consistencia suave."
-                ],
-                tips: 'Usa una madera de sabor suave como manzano o cerezo para ahumar las papas. Maderas fuertes como el mezquite pueden ser demasiado intensas.'
-            },
-            {
-                id: 'receta-ensalada-col',
-                title: 'Ensalada de Col Rizada con Vinagreta',
-                category: 'acompanamiento',
-                image: 'https://placehold.co/400x200/55a630/ffffff?text=Ensalada+de+Col+Rizada',
-                time: '10 min',
-                timeMinutes: 10,
-                difficulty: 'Fácil',
-                difficultyValue: 1,
-                ingredients: [
-                    { amount: "4", unit: "tazas", name: "de col rizada, lavada y picada." },
-                    { amount: "1/4", unit: "taza", name: "de pasas." },
-                    { amount: "1/4", unit: "taza", name: "de nueces tostadas." },
-                    { amount: "", unit: "", name: "Para la vinagreta:", isSubheader: true },
-                    { amount: "2", unit: "cdas", name: "de aceite de oliva.", isSubItem: true },
-                    { amount: "1", unit: "cda", name: "de vinagre de sidra de manzana.", isSubItem: true },
-                    { amount: "1", unit: "cda", name: "de mostaza Dijon.", isSubItem: true },
-                    { amount: "1", unit: "cda", name: "de miel.", isSubItem: true },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto.", isSubItem: true }
-                ],
-                instructions: [
-                    "En un tazón grande, combina la col rizada, pasas y nueces.",
-                    "En otro tazón, mezcla los ingredientes de la vinagreta.",
-                    "Vierte la vinagreta sobre la ensalada y mezcla bien."
-                ],
-                tips: 'La col rizada (kale) puede ser dura. "Masajea" la col con la vinagreta usando tus manos durante 1-2 minutos para ablandar las hojas.'
-            },
-            {
-                id: 'receta-salsa-bbq',
-                title: 'Salsa Barbacoa Casera',
-                category: 'acompanamiento',
-                image: 'https://placehold.co/400x200/8f250c/ffffff?text=Salsa+Barbacoa',
-                time: '15 min',
-                timeMinutes: 15,
-                difficulty: 'Fácil',
-                difficultyValue: 1,
-                ingredients: [
-                    { amount: "1", unit: "taza", name: "de kétchup." },
-                    { amount: "1/4", unit: "taza", name: "de vinagre de sidra de manzana." },
-                    { amount: "2", unit: "cdas", name: "de azúcar moreno." },
-                    { amount: "1", unit: "cda", name: "de mostaza Dijon." },
-                    { amount: "1", unit: "cdta", name: "de salsa Worcestershire." },
-                    { amount: "1", unit: "cdta", name: "de pimentón ahumado." },
-                    { amount: "1/2", unit: "cdta", name: "de ajo en polvo." },
-                    { amount: "1/2", unit: "cdta", name: "de cebolla en polvo." },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto." }
-                ],
-                instructions: [
-                    "Combina todos los ingredientes en una cacerola a fuego medio.",
-                    "Lleva a ebullición, reduce el fuego y cocina a fuego lento 10-15 minutos, removiendo, hasta que espese.",
-                    "Deja enfriar antes de usar."
-                ],
-                tips: 'Para una salsa más compleja, añade 1/4 de taza de bourbon o ron oscuro durante la cocción.'
-            },
-            {
-                id: 'receta-maiz-parrilla',
-                title: 'Maíz a la Parrilla con Mantequilla de Hierbas',
-                category: 'acompanamiento',
-                image: 'https://placehold.co/400x200/fde047/4a2d1f?text=Maíz+a+la+Parrilla',
-                time: '20 min',
-                timeMinutes: 20,
-                difficulty: 'Fácil',
-                difficultyValue: 1,
-                ingredients: [
-                    { amount: "4", unit: "mazorcas", name: "de maíz, con hojas." },
-                    { amount: "4", unit: "cdas", name: "de mantequilla derretida." },
-                    { amount: "2", unit: "cdas", name: "de perejil fresco picado." },
-                    { amount: "2", unit: "cdas", name: "de cebollín fresco picado." },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto." }
-                ],
-                instructions: [
-                    "Remoja las mazorcas en agua por al menos 30 minutos.",
-                    "Precalienta el barril a temperatura media-alta.",
-                    "Asa las mazorcas directamente en la parrilla, girando, por 10-15 minutos o hasta que estén tiernas y doradas.",
-                    "Mezcla la mantequilla derretida, perejil, cebollín, sal y pimienta.",
-                    "Cepilla el maíz con la mantequilla de hierbas antes de servir."
-                ],
-                tips: 'No quites todas las hojas del maíz. Tira de ellas hacia atrás, quita los pelos, unta el maíz con mantequilla de hierbas y vuelve a cerrar las hojas. Asa el maíz envuelto en sus propias hojas.'
-            },
-            {
-                id: 'receta-esparragos',
-                title: 'Espárragos a la Parrilla con Limón y Parmesano',
-                category: 'acompanamiento',
-                image: 'https://placehold.co/400x200/84cc16/ffffff?text=Espárragos',
-                time: '10 min',
-                timeMinutes: 10,
-                difficulty: 'Fácil',
-                difficultyValue: 1,
-                ingredients: [
-                    { amount: "1", unit: "manojo", name: "de espárragos frescos." },
-                    { amount: "2", unit: "cdas", name: "de aceite de oliva." },
-                    { amount: "1", unit: "", name: "limón (jugo y ralladura)." },
-                    { amount: "1/4", unit: "taza", name: "de queso parmesano rallado." },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto." }
-                ],
-                instructions: [
-                    "Lava y recorta los extremos leñosos de los espárragos.",
-                    "Mezcla aceite de oliva, jugo y ralladura de limón, parmesano, sal y pimienta.",
-                    "Cepilla los espárragos con esta mezcla.",
-                    "Asa en la parrilla del barril por 5-7 minutos, girando, hasta que estén tiernos y ligeramente dorados.",
-                    "Sirve con más ralladura de limón y parmesano."
-                ],
-                tips: 'Añade el queso parmesano solo en el último minuto de cocción, o se quemará y amargará.'
-            },
-            {
-                id: 'receta-ensalada-tomate',
-                title: 'Ensalada de Tomate y Mozzarella con Albahaca',
-                category: 'acompanamiento',
-                image: 'https://placehold.co/400x200/ef4444/ffffff?text=Ensalada+Tomate+Mozzarella',
-                time: '5 min',
-                timeMinutes: 5,
-                difficulty: 'Fácil',
-                difficultyValue: 1,
-                ingredients: [
-                    { amount: "4", unit: "", name: "tomates medianos, en rodajas." },
-                    { amount: "200", unit: "g", name: "de queso mozzarella fresco, en rodajas." },
-                    { amount: "", unit: "", name: "Hojas frescas de albahaca." },
-                    { amount: "2", unit: "cdas", name: "de aceite de oliva virgen extra." },
-                    { amount: "", unit: "", name: "Vinagre balsámico." },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto." }
-                ],
-                instructions: [
-                    "Alterna las rodajas de tomate y mozzarella en un plato.",
-                    "Coloca hojas de albahaca entre las rodajas.",
-                    "Rocía con aceite de oliva, vinagre balsámico, sal y pimienta.",
-                    "Deja reposar unos minutos antes de servir."
-                ],
-                tips: 'Usa tomates de buena calidad y a temperatura ambiente, nunca fríos de la nevera. Sazona los tomates con sal *antes* de añadir la mozzarella.'
-            },
-            {
-                id: 'receta-papas-hasselback',
-                title: 'Papas Hasselback con Hierbas y Queso',
-                category: 'acompanamiento',
-                image: 'https://placehold.co/400x200/f5cb5c/4a2d1f?text=Papas+Hasselback',
-                time: '1 hora',
-                timeMinutes: 60,
-                difficulty: 'Fácil',
-                difficultyValue: 1,
-                ingredients: [
-                    { amount: "4", unit: "", name: "papas medianas." },
-                    { amount: "4", unit: "cdas", name: "de mantequilla derretida." },
-                    { amount: "2", unit: "cdas", name: "de romero fresco picado." },
-                    { amount: "1/4", unit: "taza", name: "de queso cheddar rallado." },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto." }
-                ],
-                instructions: [
-                    "Lava las papas y córtalas en rodajas finas sin llegar al fondo.",
-                    "Precalienta el barril a 204°C.",
-                    "Coloca las papas en una fuente resistente al fuego.",
-                    "Mezcla la mantequilla derretida con romero, sal y pimienta. Cepilla sobre las papas.",
-                    "Hornea en el barril por 45-60 minutos, o hasta que estén tiernas y doradas.",
-                    "Espolvorea el queso cheddar y hornea unos minutos más hasta que se derrita."
-                ],
-                tips: 'Para cortar las papas fácilmente sin llegar al fondo, colócalas entre dos palillos chinos o mangos de cucharas de madera.'
-            },
-            {
-                id: 'receta-yuca-frita',
-                title: 'Yuca Frita con Mojo',
-                category: 'acompanamiento',
-                image: 'https://placehold.co/400x200/ffe8d6/4a2d1f?text=Yuca+Frita+con+Mojo',
-                time: '45 min',
-                timeMinutes: 45,
-                difficulty: 'Media',
-                difficultyValue: 2,
-                ingredients: [
-                    { amount: "2", unit: "", name: "yucas medianas, peladas y en tiras." },
-                    { amount: "", unit: "", name: "Aceite vegetal para freír." },
-                    { amount: "", unit: "", name: "Sal al gusto." },
-                    { amount: "", unit: "", name: "Para el Mojo:", isSubheader: true },
-                    { amount: "4", unit: "", name: "dientes de ajo, picados finamente.", isSubItem: true },
-                    { amount: "1/2", unit: "taza", name: "de aceite de oliva.", isSubItem: true },
-                    { amount: "1/4", unit: "taza", name: "de jugo de limón.", isSubItem: true },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto.", isSubItem: true }
-                ],
-                instructions: [
-                    "Hierve las tiras de yuca en agua con sal hasta que estén tiernas (20-25 min). Escurre y deja enfriar.",
-                    "Precalienta el barril a 190°C para freír (o usa sartén con aceite).",
-                    "Fríe las tiras de yuca hasta que estén doradas y crujientes. Escurre y sazona con sal.",
-                    "Para el mojo: Calienta aceite de oliva, agrega el ajo y cocina a fuego lento hasta que esté dorado.",
-                    "Retira del fuego y mezcla el ajo dorado con jugo de limón, sal y pimienta.",
-                    "Sirve la yuca caliente con el mojo."
-                ],
-                tips: 'Para una yuca extra crujiente, congela las tiras de yuca *después* de hervirlas y enfriarlas. Fríelas directamente desde congeladas.'
-            },
-            {
-                id: 'receta-pure-yuca',
-                title: 'Puré de Yuca con Queso',
-                category: 'acompanamiento',
-                image: 'https://placehold.co/400x200/fff4e6/4a2d1f?text=Puré+de+Yuca',
-                time: '30 min',
-                timeMinutes: 30,
-                difficulty: 'Fácil',
-                difficultyValue: 1,
-                ingredients: [
-                    { amount: "2", unit: "", name: "yucas medianas, peladas y en trozos." },
-                    { amount: "1/2", unit: "taza", name: "de queso crema." },
-                    { amount: "1/4", unit: "taza", name: "de leche caliente." },
-                    { amount: "2", unit: "cdas", name: "de mantequilla." },
-                    { amount: "", unit: "", name: "Sal y pimienta al gusto." }
-                ],
-                instructions: [
-                    "Hierve la yuca en agua con sal hasta que esté tierna (20-25 min). Escurre.",
-                    "En un tazón, mezcla la yuca, queso crema, leche caliente y mantequilla.",
-                    "Usa un machacador o procesador para hacer un puré suave.",
-                    "Sazona con sal y pimienta. Sirve caliente."
-                ],
-                tips: 'Asegúrate de quitar la hebra central (fibrosa) de la yuca después de hervirla y antes de hacer el puré.'
+            let amounts = [];
+            for (let i = 0; i < safeMoments; i++) {
+                let val;
+                if (minVal >= maxVal) val = minVal;
+                else val = Math.floor(Math.random() * ((maxVal - minVal) / 100 + 1)) * 100 + minVal;
+                amounts.push(val);
             }
-        ];
-        // --- FIN: Base de Datos de Recetas (JSON) ---
 
+            let currentSum = amounts.reduce((a, b) => a + b, 0);
+            let diff = safeTarget - currentSum;
+            let safety = 0;
+            const maxLoops = safeMoments * 500;
 
-        // --- INICIO: Lógica de la Aplicación ---
-        document.addEventListener('DOMContentLoaded', function () {
+            while (diff !== 0 && safety < maxLoops) {
+                const idx = Math.floor(Math.random() * safeMoments);
+                const step = 100; 
+                if (diff > 0) {
+                    if (amounts[idx] + step <= maxVal * 1.5 || average < 200) { 
+                        amounts[idx] += step;
+                        diff -= step;
+                    }
+                } else {
+                    if (amounts[idx] - step >= minVal) {
+                        amounts[idx] -= step;
+                        diff += step;
+                    }
+                }
+                safety++;
+            }
             
-            // --- Declaración de variables ---
-            const tabs = document.querySelectorAll('.tab-button');
-            const tabContents = document.querySelectorAll('.tab-content');
-            const accordionItems = document.querySelectorAll('.accordion-item');
+            if (diff !== 0) {
+                const maxAmountIdx = amounts.indexOf(Math.max(...amounts));
+                if (maxAmountIdx !== -1) {
+                    amounts[maxAmountIdx] += diff;
+                }
+            }
+
+            return amounts
+                .map((amount) => ({ amount: amount, paid: false, datePaid: null }))
+                .sort(() => Math.random() - 0.5)
+                .map((item, index) => ({ ...item, id: index + 1 }));
+        };
+
+        // --- COMPONENTE PRINCIPAL ---
+        function App() {
+            // Estados
+            const [targetAmount, setTargetAmount] = useState(0);
+            const [totalMoments, setTotalMoments] = useState(DEFAULT_MOMENTS);
+            const [savings, setSavings] = useState([]);
+            const [isConfigured, setIsConfigured] = useState(false);
+            const [amountInput, setAmountInput] = useState('');
+            const [momentsInput, setMomentsInput] = useState('365');
             
-            // Variables del Modal
-            const modal = document.getElementById('recipe-modal');
-            const modalClose = document.getElementById('modal-close');
-            const modalTitle = document.getElementById('modal-title');
-            const modalBody = document.getElementById('modal-body');
-            const modalPrintBtn = document.getElementById('modal-print-btn');
-            // ! INICIO: Nuevas variables de Modal (Tips)
-            const modalTipsContent = document.getElementById('modal-tips-content');
-            const modalTipsText = document.getElementById('modal-tips-text');
-            // ! FIN: Nuevas variables de Modal (Tips)
-
-            // Variables de Recetas (se llenarán dinámicamente)
-            let allRecipeCards = []; // Se llenará después de generar las tarjetas
-            const gridPrincipales = document.getElementById('grid-principales');
-            const gridAcompanamientos = document.getElementById('grid-acompanamientos');
+            // UI
+            const [darkMode, setDarkMode] = useState(false);
+            const [showHelp, setShowHelp] = useState(false);
+            const [filter, setFilter] = useState('all');
+            const [sortOrder, setSortOrder] = useState('default');
+            const [searchTerm, setSearchTerm] = useState('');
+            const [currency, setCurrency] = useState('COP');
             
-            // Variables de Filtro/Búsqueda
-            const filterContainer = document.getElementById('filter-container');
-            const searchBar = document.getElementById('search-bar');
-            // ! INICIO: Nueva variable (Sort)
-            const sortSelect = document.getElementById('sort-select');
-            // ! FIN: Nueva variable (Sort)
-            const headerPrincipales = document.getElementById('header-principales');
-            const headerAcompanamientos = document.getElementById('header-acompanamientos');
-            const noResults = document.getElementById('no-results');
+            const fileInputRef = useRef(null);
 
-            // ! INICIO: Variables de Favoritos
-            let favorites = getFavorites();
-            // ! FIN: Variables de Favoritos
+            // Carga de datos
+            useEffect(() => {
+                try {
+                    const savedConfig = localStorage.getItem('savings_v4_config');
+                    const savedData = localStorage.getItem('savings_v4_data');
+                    const savedTheme = localStorage.getItem('savings_v4_theme');
 
-            // Mapa de iconos
-            const iconMap = {
-                cerdo: '🐖',
-                res: '🐄',
-                pollo: '🐓',
-                cordero: '🐑',
-                pavo: '🦃',
-                pescado: '🐟',
-                acompanamiento: '🥗'
+                    if (savedConfig && savedData) {
+                        const parsedConfig = JSON.parse(savedConfig);
+                        const parsedData = JSON.parse(savedData);
+                        
+                        if (parsedConfig && parsedConfig.target && Array.isArray(parsedData)) {
+                            setTargetAmount(parsedConfig.target);
+                            setTotalMoments(parsedConfig.moments || DEFAULT_MOMENTS);
+                            setAmountInput(new Intl.NumberFormat('es-CO').format(parsedConfig.target));
+                            setMomentsInput(parsedConfig.moments || DEFAULT_MOMENTS);
+                            setSavings(parsedData);
+                            setIsConfigured(true);
+                        }
+                    }
+                    if (savedTheme === 'dark') setDarkMode(true);
+                } catch (error) {
+                    console.error("Error cargando datos:", error);
+                }
+            }, []);
+
+            // Guardado de datos
+            useEffect(() => {
+                try {
+                    if (isConfigured && targetAmount > 0) {
+                        localStorage.setItem('savings_v4_config', JSON.stringify({ target: targetAmount, moments: totalMoments }));
+                        localStorage.setItem('savings_v4_data', JSON.stringify(savings));
+                    }
+                    localStorage.setItem('savings_v4_theme', darkMode ? 'dark' : 'light');
+
+                    // Aplicar clase al body
+                    if (darkMode) {
+                        document.body.classList.add('bg-slate-900', 'text-slate-100');
+                        document.body.classList.remove('bg-slate-50', 'text-slate-800');
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        document.body.classList.remove('bg-slate-900', 'text-slate-100');
+                        document.body.classList.add('bg-slate-50', 'text-slate-800');
+                        document.documentElement.classList.remove('dark');
+                    }
+                } catch (e) {}
+            }, [savings, targetAmount, totalMoments, isConfigured, darkMode]);
+
+            const handleStart = (e) => {
+                e.preventDefault();
+                let amountStr = String(amountInput).replace(/[^0-9]/g, '');
+                let amount = parseInt(amountStr, 10);
+                let moments = parseInt(momentsInput, 10);
+                
+                if (!amount || amount < (moments * 100)) {
+                    alert(`Monto insuficiente para ${moments} momentos. Mínimo $100 por casilla.`);
+                    return;
+                }
+                if (!moments || moments < 1 || moments > 5000) {
+                    alert("Elige entre 1 y 5000 momentos.");
+                    return;
+                }
+                
+                amount = roundTo100(amount);
+                
+                if (isConfigured) {
+                    if (!window.confirm("¡Atención! Al guardar se generará una NUEVA tabla y se borrarán las casillas marcadas. ¿Continuar?")) {
+                        return;
+                    }
+                }
+
+                const newData = generateDataForTarget(amount, moments);
+                setTargetAmount(amount);
+                setTotalMoments(moments);
+                setSavings(newData);
+                setIsConfigured(true);
             };
 
-            // --- Funcionalidad de Pestañas (Tabs) ---
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tabContents.forEach(c => c.classList.remove('active'));
-                    tab.classList.add('active');
-                    const activeTabContent = document.getElementById(tab.dataset.tab + '-content');
-                    if (activeTabContent) activeTabContent.classList.add('active');
-                });
-            });
+            const handleEditConfig = () => setIsConfigured(false);
 
-            // --- Funcionalidad de Acordeón ---
-            accordionItems.forEach(item => {
-                const header = item.querySelector('.accordion-header');
-                const content = item.querySelector('.accordion-content');
-                const icon = header.querySelector('span:last-child');
+            const handleReset = () => {
+                if (window.confirm("¿Borrar todo y empezar de cero?")) {
+                    setIsConfigured(false);
+                    setTargetAmount(0);
+                    setAmountInput('');
+                    setMomentsInput('365');
+                    setSavings([]);
+                    localStorage.removeItem('savings_v4_config');
+                    localStorage.removeItem('savings_v4_data');
+                }
+            };
 
-                header.addEventListener('click', () => {
-                    const isOpen = content.style.maxHeight;
-                    if (isOpen) {
-                        content.style.maxHeight = null;
-                        if (icon) icon.textContent = '+';
-                    } else {
-                        if (content) content.style.maxHeight = content.scrollHeight + 'px';
-                        if (icon) icon.textContent = '−';
+            const togglePay = (id) => {
+                setSavings(prev => prev.map(item => {
+                    if (item.id === id) {
+                        const isPaying = !item.paid;
+                        return {
+                            ...item,
+                            paid: isPaying,
+                            datePaid: isPaying ? new Date().toISOString() : null
+                        };
                     }
-                });
-            });
+                    return item;
+                }));
+            };
 
-            // --- ! INICIO: Generación Dinámica de Recetas (Actualizada) ---
-            function generateRecipeCards() {
-                if (!gridPrincipales || !gridAcompanamientos) return;
+            const handlePrint = () => window.print();
 
-                // ! Actualizar favoritos desde localStorage al inicio
-                favorites = getFavorites();
+            const exportData = () => {
+                const dataStr = JSON.stringify({ config: { target: targetAmount, moments: totalMoments }, data: savings }, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `ahorro_flex_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
 
-                let gridPrincipalesHTML = '';
-                let gridAcompanamientosHTML = '';
+            const importData = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const json = JSON.parse(event.target.result);
+                        if (json.config && json.data) {
+                            if (window.confirm("Se reemplazarán los datos actuales. ¿Continuar?")) {
+                                setTargetAmount(json.config.target);
+                                setTotalMoments(json.config.moments || DEFAULT_MOMENTS);
+                                setAmountInput(new Intl.NumberFormat('es-CO').format(json.config.target));
+                                setMomentsInput(json.config.moments || DEFAULT_MOMENTS);
+                                setSavings(json.data);
+                                setIsConfigured(true);
+                                alert("¡Carga exitosa!");
+                            }
+                        }
+                    } catch (err) { alert("El archivo no es válido."); }
+                };
+                reader.readAsText(file);
+                e.target.value = '';
+            };
 
-                recipeData.forEach(recipe => {
-                    const icon = iconMap[recipe.category] || '🍽️';
-                    // ! Comprobar si es favorito
-                    const isFavorite = favorites.includes(recipe.id);
+            const totalPaid = useMemo(() => savings.reduce((acc, curr) => curr.paid ? acc + curr.amount : acc, 0), [savings]);
+            const percent = targetAmount > 0 ? (totalPaid / targetAmount) * 100 : 0;
+            
+            const stats = useMemo(() => {
+                if (!savings || savings.length === 0) return { min: 0, max: 0 };
+                const amounts = savings.map(s => s.amount);
+                return { min: Math.min(...amounts), max: Math.max(...amounts) };
+            }, [savings]);
+
+            const displayedSavings = useMemo(() => {
+                if (!savings) return [];
+                let result = [...savings];
+                if (searchTerm) result = result.filter(i => i.amount.toString().includes(searchTerm));
+                if (filter === 'pending') result = result.filter(i => !i.paid);
+                if (filter === 'paid') result = result.filter(i => i.paid);
+                
+                if (sortOrder === 'asc') result.sort((a, b) => a.amount - b.amount);
+                else if (sortOrder === 'desc') result.sort((a, b) => b.amount - a.amount);
+                else result.sort((a,b) => a.id - b.id); 
+                return result;
+            }, [savings, filter, sortOrder, searchTerm]);
+
+            if (!isConfigured) {
+                return (
+                    <div className={`min-h-screen flex items-center justify-center p-4 font-sans`}>
+                        <div className={`relative p-8 rounded-3xl shadow-2xl max-w-md w-full border ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-indigo-100'}`}>
+                            <button onClick={() => setDarkMode(!darkMode)} className="absolute top-4 right-4 p-2 rounded-full opacity-60 hover:opacity-100">
+                                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                            </button>
+
+                            <div className="flex justify-center mb-6">
+                                <div className={`p-5 rounded-full shadow-lg ${darkMode ? 'bg-indigo-900/50' : 'bg-indigo-100'}`}>
+                                    <PiggyBank className="w-12 h-12 text-indigo-600" />
+                                </div>
+                            </div>
+                            <h1 className="text-3xl font-black text-center mb-2">Plan de Ahorro</h1>
+                            <p className="text-center mb-8 text-sm opacity-60">Personaliza tu meta y duración.</p>
+
+                            <form onSubmit={handleStart} className="space-y-5">
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 opacity-60 ml-1">Monto Total</label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-lg opacity-50">$</span>
+                                        <input
+                                            type="text" required value={amountInput}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/[^0-9]/g, '');
+                                                setAmountInput(new Intl.NumberFormat('es-CO').format(val));
+                                            }}
+                                            placeholder="Ej: 5.000.000"
+                                            className={`w-full pl-10 pr-4 py-3 border rounded-xl font-bold text-xl focus:outline-none focus:ring-2 transition-all ${darkMode ? 'bg-slate-900 border-slate-600' : 'bg-slate-50 border-slate-200'}`}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold uppercase tracking-wider mb-2 opacity-60 ml-1">Número de Momentos (Pasos)</label>
+                                    <div className="relative">
+                                        <Hash className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 opacity-50" />
+                                        <input
+                                            type="number" required min="1" max="5000" value={momentsInput}
+                                            onChange={(e) => setMomentsInput(e.target.value)}
+                                            placeholder="365"
+                                            className={`w-full pl-10 pr-4 py-3 border rounded-xl font-bold text-xl focus:outline-none focus:ring-2 transition-all ${darkMode ? 'bg-slate-900 border-slate-600' : 'bg-slate-50 border-slate-200'}`}
+                                        />
+                                    </div>
+                                </div>
+                                
+                                {savings && savings.length > 0 && (
+                                    <div className="flex items-center gap-2 text-xs text-yellow-600 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                                        <AlertTriangle className="w-4 h-4 shrink-0" />
+                                        <span>Importante: Se reiniciará el progreso al guardar.</span>
+                                    </div>
+                                )}
+
+                                <div className="flex gap-3 pt-4">
+                                    <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg transition-transform active:scale-95">
+                                        {savings && savings.length > 0 ? 'Actualizar Plan' : 'Crear Plan'}
+                                    </button>
+                                    <button type="button" onClick={() => fileInputRef.current.click()} className="px-4 rounded-xl border flex items-center justify-center hover:bg-opacity-10 hover:bg-black" title="Importar Backup"><Upload className="w-6 h-6 opacity-60" /></button>
+                                </div>
+                            </form>
+                            <input type="file" ref={fileInputRef} onChange={importData} accept=".json" className="hidden" />
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className={`min-h-screen font-sans pb-24`}>
                     
-                    const cardHTML = `
-                        <div class="recipe-card rounded-lg shadow-md overflow-hidden" 
-                             data-recipe-id="${recipe.id}" 
-                             data-category="${recipe.category}"
-                             data-time-minutes="${recipe.timeMinutes}"
-                             data-difficulty-value="${recipe.difficultyValue}"
-                             data-title="${recipe.title.toLowerCase()}"
-                        >
-                            <div class="recipe-card-image-container">
-                                <img src="${recipe.image}" alt="${recipe.title}" class="w-full h-40 object-cover">
-                                <!-- ! Botón de Favorito -->
-                                <span class="favorite-btn ${isFavorite ? 'active' : ''}" data-fav-id="${recipe.id}">❤️</span>
-                            </div>
-                            <div class="p-4">
-                                <h3 class="text-lg font-bold">${icon} ${recipe.title}</h3>
-                            </div>
-                            <div class="card-details">
-                                <span><strong>Tiempo:</strong> ${recipe.time}</span>
-                                <span><strong>Dificultad:</strong> ${recipe.difficulty}</span>
+                    {/* MODAL AYUDA */}
+                    {showHelp && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in">
+                            <div className={`relative max-w-lg w-full p-6 rounded-2xl shadow-2xl ${darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'}`}>
+                                <button onClick={() => setShowHelp(false)} className="absolute top-4 right-4 opacity-50 hover:opacity-100"><X className="w-6 h-6" /></button>
+                                <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><HelpCircle className="w-6 h-6 text-indigo-500" /> Ayuda</h2>
+                                <div className="space-y-4 text-sm opacity-80">
+                                    <p>Tu meta de <strong>{formatMoney(targetAmount)}</strong> se divide en <strong>{totalMoments} momentos</strong> diferentes.</p>
+                                    
+                                    <div className={`p-4 rounded-xl border ${darkMode ? 'bg-slate-700 border-slate-600' : 'bg-slate-100 border-slate-200'}`}>
+                                        <p className="font-bold mb-2">Valores en tu tabla:</p>
+                                        <ul className="space-y-1 list-disc list-inside">
+                                            <li><span className="text-green-500 font-bold">Mínimo (Días Fáciles):</span> {formatMoney(stats.min)}</li>
+                                            <li><span className="text-red-500 font-bold">Máximo (Días Reto):</span> {formatMoney(stats.max)}</li>
+                                        </ul>
+                                    </div>
+
+                                    <p><strong>Instrucciones:</strong></p>
+                                    <ul className="list-decimal list-inside space-y-1">
+                                        <li>Elige una casilla según tu presupuesto del día.</li>
+                                        <li>Deposita el dinero real en tu alcancía.</li>
+                                        <li>Marca la casilla en la app.</li>
+                                        <li>¡Repite hasta completar el 100%!</li>
+                                    </ul>
+                                </div>
                             </div>
                         </div>
-                    `;
-                    
-                    if (recipe.category === 'acompanamiento') {
-                        gridAcompanamientosHTML += cardHTML;
-                    } else {
-                        gridPrincipalesHTML += cardHTML;
-                    }
-                });
+                    )}
 
-                gridPrincipales.innerHTML = gridPrincipalesHTML;
-                gridAcompanamientos.innerHTML = gridAcompanamientosHTML;
+                    {/* ÁREA IMPRIMIBLE */}
+                    <div className="printable-area hidden">
+                        <div className="print-header">
+                            <h1>Plan de Ahorro: {formatMoney(targetAmount)}</h1>
+                            <p>Meta: {totalMoments} pasos | Min: {formatMoney(stats.min)} | Max: {formatMoney(stats.max)}</p>
+                        </div>
+                        <div className="print-grid">
+                            {savings.map(s => (
+                                <div key={s.id} className={`print-item ${s.paid ? 'paid' : ''}`}>
+                                    #{s.id} <br/> <strong>{formatMoney(s.amount)}</strong>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
 
-                // ! IMPORTANTE: Seleccionar las tarjetas DESPUÉS de generarlas
-                allRecipeCards = document.querySelectorAll('.recipe-card');
-                
-                // Añadir listeners a las nuevas tarjetas
-                allRecipeCards.forEach(card => {
-                    // Listener para abrir el modal (en la tarjeta)
-                    card.addEventListener('click', (e) => {
-                        // Solo abrir modal si no se hizo clic en el botón de favorito
-                        if (e.target.closest('.favorite-btn')) return;
-                        const recipeId = card.dataset.recipeId;
-                        openModal(recipeId);
-                    });
-                });
+                    {/* UI PRINCIPAL */}
+                    <div className="no-print">
+                        <div className={`sticky top-0 z-30 backdrop-blur-md border-b transition-colors ${darkMode ? 'bg-slate-900/90 border-slate-800' : 'bg-white/90 border-slate-200'}`}>
+                            <div className="max-w-7xl mx-auto px-4 py-3">
+                                <div className="flex flex-wrap justify-between items-center mb-4 gap-3">
+                                    <h1 className="text-lg font-bold flex items-center gap-2">
+                                        <div className={`p-1.5 rounded-lg ${darkMode ? 'bg-indigo-900/50' : 'bg-indigo-50'}`}><PiggyBank className="w-5 h-5 text-indigo-500" /></div>
+                                        <span>Ahorro Flex</span>
+                                    </h1>
+                                    <div className="flex items-center gap-2">
+                                        <div className={`flex items-center gap-1 p-1 rounded-xl border ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                                            <button onClick={handleEditConfig} className="p-2 opacity-60 hover:opacity-100 hover:text-indigo-500" title="Modificar Configuración"><Pencil className="w-4 h-4" /></button>
+                                            <button onClick={handleReset} className="p-2 opacity-60 hover:opacity-100 hover:text-red-500" title="Borrar Todo"><Trash2 className="w-4 h-4" /></button>
+                                            <div className="w-px h-4 bg-current opacity-20"></div>
+                                            <button onClick={() => setShowHelp(true)} className="p-2 opacity-60 hover:opacity-100" title="Ayuda"><HelpCircle className="w-4 h-4" /></button>
+                                            <button onClick={handlePrint} className="p-2 opacity-60 hover:opacity-100" title="Imprimir PDF"><Printer className="w-4 h-4" /></button>
+                                            <button onClick={exportData} className="p-2 opacity-60 hover:opacity-100" title="Exportar"><Download className="w-4 h-4" /></button>
+                                            <button onClick={() => setDarkMode(!darkMode)} className="p-2 opacity-60 hover:opacity-100">{darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}</button>
+                                        </div>
+                                    </div>
+                                </div>
 
-                // ! Añadir listeners a los botones de favorito
-                document.querySelectorAll('.favorite-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation(); // Evitar que se abra el modal
-                        toggleFavorite(e.target);
-                    });
-                });
-            }
-            // --- ! FIN: Generación Dinámica de Recetas ---
+                                <div className={`rounded-2xl p-5 border mb-4 shadow-sm relative overflow-hidden ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                                    <div className="relative z-10">
+                                        <div className="flex justify-between items-end mb-2">
+                                            <div>
+                                                <p className="text-[10px] opacity-50 uppercase font-bold tracking-wider mb-1">Ahorrado</p>
+                                                <div className="flex items-baseline gap-2">
+                                                    <p className="text-2xl md:text-3xl font-black leading-none tracking-tight">{formatMoney(totalPaid, currency)}</p>
+                                                    <span className="text-xs opacity-50 font-medium">/ {formatMoney(targetAmount, currency)}</span>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-indigo-500 font-bold text-xl md:text-2xl">{percent.toFixed(1)}%</p>
+                                            </div>
+                                        </div>
+                                        <div className={`w-full rounded-full h-2.5 overflow-hidden mb-3 ${darkMode ? 'bg-slate-900' : 'bg-slate-100'}`}>
+                                            <div className="bg-gradient-to-r from-pink-500 to-indigo-600 h-2.5 rounded-full transition-all duration-700" style={{ width: `${percent}%` }}></div>
+                                        </div>
+                                        <div className="flex gap-4 text-xs pt-2 border-t border-dashed border-gray-500/20">
+                                            <div className="flex items-center gap-1 opacity-70"><TrendingDown className="w-3 h-3 text-green-500"/> Min: <b>{formatMoney(stats.min, currency)}</b></div>
+                                            <div className="flex items-center gap-1 opacity-70"><TrendingUp className="w-3 h-3 text-red-500"/> Max: <b>{formatMoney(stats.max, currency)}</b></div>
+                                        </div>
+                                    </div>
+                                </div>
 
+                                <div className="flex flex-col sm:flex-row gap-3">
+                                    <div className="relative flex-grow">
+                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 opacity-30"><Search className="w-4 h-4"/></span>
+                                        <input 
+                                            type="number" placeholder="Buscar monto..." 
+                                            className={`w-full pl-9 pr-4 py-2 rounded-xl border text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}
+                                            value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="flex gap-2 shrink-0">
+                                        <div className={`flex rounded-xl border p-1 ${darkMode ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
+                                            {['all', 'pending', 'paid'].map(f => (
+                                                <button key={f} onClick={() => setFilter(f)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${filter === f ? (darkMode ? 'bg-slate-600 text-white' : 'bg-slate-100 text-slate-800') : 'opacity-40 hover:opacity-100'}`}>
+                                                    {f === 'all' ? 'Todo' : f === 'pending' ? 'Falta' : 'Listo'}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <button onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : (prev === 'desc' ? 'default' : 'asc'))} className={`px-3 rounded-xl border flex items-center justify-center ${darkMode ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-slate-200 hover:bg-slate-50'}`}>
+                                            <ArrowUpDown className="w-4 h-4 opacity-60" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-            // --- ! INICIO: Funcionalidad del Modal de Recetas (Actualizada) ---
-            function openModal(recipeId) {
-                const recipe = recipeData.find(r => r.id === recipeId);
-                
-                if (recipe && modalTitle && modalBody && modal) {
-                    modalTitle.textContent = recipe.title;
-                    
-                    // ! INICIO: Construcción dinámica de contenido
-                    let modalHTML = '';
+                        <div className="max-w-7xl mx-auto p-4">
+                            {displayedSavings.length === 0 ? (
+                                <div className="text-center py-20 opacity-40"><p>Sin resultados.</p></div>
+                            ) : (
+                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2 sm:gap-3">
+                                {displayedSavings.map((item) => (
+                                    <button
+                                    key={item.id}
+                                    onClick={() => togglePay(item.id)}
+                                    className={`
+                                        relative group flex flex-col items-center justify-center py-3 px-1 rounded-xl border transition-all duration-200
+                                        ${item.paid 
+                                        ? 'bg-indigo-600 border-indigo-600 text-white shadow-inner scale-95 opacity-80' 
+                                        : (darkMode ? 'bg-slate-800 border-slate-700 hover:border-indigo-500' : 'bg-white border-slate-200 hover:border-indigo-400 hover:shadow-md hover:-translate-y-1')}
+                                    `}
+                                    >
+                                    {item.paid && <span className="absolute top-1 right-1 opacity-50"><CheckCircle2 className="w-4 h-4 text-white"/></span>}
+                                    <span className={`text-sm md:text-base font-black tracking-tight ${item.paid ? 'text-white' : (darkMode ? 'text-slate-200' : 'text-slate-700')}`}>
+                                        {formatMoney(item.amount, currency).replace(',00', '')}
+                                    </span>
+                                    <span className="absolute bottom-1 right-2 text-[8px] font-mono font-bold opacity-30">#{item.id}</span>
+                                    {!item.paid && item.amount === stats.min && <div className="absolute top-1.5 left-2 w-1.5 h-1.5 bg-green-500 rounded-full" title="Mínimo"></div>}
+                                    {!item.paid && item.amount === stats.max && <div className="absolute top-1.5 left-2 w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" title="Máximo"></div>}
+                                    </button>
+                                ))}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
 
-                    // 1. Ingredientes
-                    if (recipe.ingredients && recipe.ingredients.length > 0) {
-                        modalHTML += '<h3 class="font-bold text-xl mb-3">Ingredientes:</h3>';
-                        modalHTML += '<ul class="list-disc pl-5 mb-4 space-y-1">';
-                        
-                        let sublistOpen = false;
-                        recipe.ingredients.forEach(ing => {
-                            const itemText = `${ing.amount ? `<strong>${ing.amount}</strong> ` : ''}${ing.unit ? `${ing.unit} ` : ''}${ing.name}`;
-                            
-                            if (ing.isSubheader) {
-                                if (sublistOpen) modalHTML += '</ul></li>'; // Cierra sublista anterior si existe
-                                modalHTML += `<li>${itemText}<ul class="list-disc pl-6 mt-1">`; // Abre nueva sublista
-                                sublistOpen = true;
-                            } else if (ing.isSubItem) {
-                                modalHTML += `<li>${itemText}</li>`; // Item dentro de sublista
-                            } else {
-                                if (sublistOpen) modalHTML += '</ul></li>'; // Cierra sublista anterior
-                                modalHTML += `<li>${itemText}</li>`; // Item normal
-                                sublistOpen = false;
-                            }
-                        });
-                        if (sublistOpen) modalHTML += '</ul></li>'; // Cierra la última sublista
-                        modalHTML += '</ul>';
-                    }
-
-                    // 2. Instrucciones
-                    if (recipe.instructions && recipe.instructions.length > 0) {
-                        modalHTML += '<h3 class="font-bold text-xl mb-3">Instrucciones:</h3>';
-                        modalHTML += '<ol class="list-decimal pl-5 space-y-2">';
-                        recipe.instructions.forEach(step => {
-                            modalHTML += `<li>${step}</li>`;
-                        });
-                        modalHTML += '</ol>';
-                    }
-                    
-                    modalBody.innerHTML = modalHTML;
-                    // ! FIN: Construcción dinámica de contenido
-                    
-                    // ! Lógica de Tips
-                    if (recipe.tips && modalTipsContent && modalTipsText) {
-                        modalTipsText.textContent = recipe.tips;
-                        modalTipsContent.classList.remove('hidden');
-                    } else {
-                        modalTipsContent.classList.add('hidden');
-                    }
-
-                    modal.style.display = 'flex';
-                    document.body.style.overflow = 'hidden';
-                }
-            }
-
-            function closeModal() {
-                if (modal) {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                }
-            }
-
-            // Clicks para cerrar el modal
-            if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
-            if (modalClose) modalClose.addEventListener('click', closeModal);
-            // --- ! FIN: Funcionalidad del Modal de Recetas ---
-
-
-            // --- ! INICIO: Funcionalidad de Filtro y Búsqueda combinada (Actualizada) ---
-            function updateRecipeView() {
-                if (!filterContainer || !searchBar || !allRecipeCards.length || !sortSelect) return;
-
-                const activeFilter = filterContainer.querySelector('.filter-button.active').dataset.filter;
-                const searchTerm = searchBar.value.toLowerCase();
-                const sortValue = sortSelect.value;
-                
-                let mainVisibleCards = [];
-                let accompVisibleCards = [];
-
-                allRecipeCards.forEach(card => {
-                    const category = card.dataset.category;
-                    const title = card.dataset.title;
-                    const recipeId = card.dataset.recipeId;
-                    
-                    // ! Lógica de Filtro (con Favoritos)
-                    const isFavorite = favorites.includes(recipeId);
-                    const matchesFilter = (activeFilter === 'todos') || 
-                                          (activeFilter === category) || 
-                                          (activeFilter === 'favoritos' && isFavorite);
-                    const matchesSearch = title.includes(searchTerm);
-
-                    if (matchesFilter && matchesSearch) {
-                        card.style.display = 'block';
-                        if (category === 'acompanamiento') {
-                            accompVisibleCards.push(card);
-                        } else {
-                            mainVisibleCards.push(card);
-                        }
-                    } else {
-                        card.style.display = 'none';
-                    }
-                });
-
-                // ! Lógica de Ordenamiento
-                const sortFunction = (a, b) => {
-                    const valA = a.dataset;
-                    const valB = b.dataset;
-
-                    switch (sortValue) {
-                        case 'time-asc':
-                            return parseFloat(valA.timeMinutes) - parseFloat(valB.timeMinutes);
-                        case 'time-desc':
-                            return parseFloat(valB.timeMinutes) - parseFloat(valA.timeMinutes);
-                        case 'difficulty-asc':
-                            return parseFloat(valA.difficultyValue) - parseFloat(valB.difficultyValue);
-                        case 'difficulty-desc':
-                            return parseFloat(valB.difficultyValue) - parseFloat(valA.difficultyValue);
-                        case 'name-asc':
-                            return valA.title.localeCompare(valB.title);
-                        case 'name-desc':
-                            return valB.title.localeCompare(valA.title);
-                        case 'default':
-                        default:
-                            return 0; // Mantener el orden del DOM
-                    }
-                };
-                
-                if (sortValue !== 'default') {
-                    mainVisibleCards.sort(sortFunction);
-                    accompVisibleCards.sort(sortFunction);
-                }
-
-                // ! Re-apendar al DOM en el orden correcto
-                mainVisibleCards.forEach(card => gridPrincipales.appendChild(card));
-                accompVisibleCards.forEach(card => gridAcompanamientos.appendChild(card));
-
-                // Actualizar visibilidad de cabeceras
-                if (headerPrincipales) headerPrincipales.style.display = (mainVisibleCards.length > 0) ? 'block' : 'none';
-                if (headerAcompanamientos) headerAcompanamientos.style.display = (accompVisibleCards.length > 0) ? 'block' : 'none';
-
-                // Mostrar mensaje de no resultados
-                if (noResults) {
-                    noResults.style.display = (mainVisibleCards.length === 0 && accompVisibleCards.length === 0) ? 'block' : 'none';
-                }
-            }
-
-            // Event Listeners para Filtro y Búsqueda
-            if (filterContainer) {
-                filterContainer.addEventListener('click', (event) => {
-                    if (event.target.classList.contains('filter-button')) {
-                        filterContainer.querySelectorAll('.filter-button').forEach(btn => btn.classList.remove('active'));
-                        event.target.classList.add('active');
-                        updateRecipeView();
-                    }
-                });
-            }
-            if (searchBar) searchBar.addEventListener('keyup', updateRecipeView);
-            // ! Listener para Ordenar
-            if (sortSelect) sortSelect.addEventListener('change', updateRecipeView);
-            // --- ! FIN: Funcionalidad de Filtro y Búsqueda ---
-            
-
-            // --- ! INICIO: Funciones de Favoritos (Nuevas) ---
-            function getFavorites() {
-                const favs = localStorage.getItem('asadosBarrilFavorites');
-                return favs ? JSON.parse(favs) : [];
-            }
-
-            function saveFavorites(favs) {
-                localStorage.setItem('asadosBarrilFavorites', JSON.stringify(favs));
-            }
-
-            function toggleFavorite(btnElement) {
-                const recipeId = btnElement.dataset.favId;
-                const index = favorites.indexOf(recipeId);
-
-                if (index > -1) {
-                    // Ya es favorito, quitar
-                    favorites.splice(index, 1);
-                    btnElement.classList.remove('active');
-                } else {
-                    // No es favorito, añadir
-                    favorites.push(recipeId);
-                    btnElement.classList.add('active');
-                }
-                saveFavorites(favorites);
-
-                // Si estamos en la vista de favoritos, actualizar la vista
-                const activeFilter = filterContainer.querySelector('.filter-button.active').dataset.filter;
-                if (activeFilter === 'favoritos') {
-                    updateRecipeView();
-                }
-            }
-            // --- ! FIN: Funciones de Favoritos ---
-
-
-            // --- ! INICIO: Funcionalidad de Imprimir ---
-            function handlePrint() {
-                const title = modalTitle.textContent;
-                // ! Actualizado para incluir los Tips
-                const content = document.getElementById('modal-body-printable').innerHTML;
-                
-                const printWindow = window.open('', '_blank');
-                printWindow.document.write('<html><head><title>Imprimir Receta</title>');
-                // Estilos simples para impresión
-                printWindow.document.write(`
-                    <style>
-                        body { font-family: 'Inter', sans-serif; line-height: 1.6; margin: 2rem; }
-                        h1 { color: #d97706; }
-                        h3 { border-bottom: 1px solid #ccc; padding-bottom: 5px; }
-                        ul, ol { padding-left: 20px; }
-                        /* Ocultar elementos no deseados en impresión */
-                        #modal-tips-content.hidden { display: none; }
-                        #modal-tips-content {
-                            background-color: #fafaf8;
-                            border-left: 4px solid #d97706;
-                            padding: 16px;
-                            border-radius: 8px;
-                            margin-top: 16px;
-                        }
-                    </style>
-                `);
-                printWindow.document.write('</head><body>');
-                printWindow.document.write(`<h1>${title}</h1>`);
-                printWindow.document.write(content);
-                printWindow.document.write('</body></html>');
-                
-                printWindow.document.close();
-                printWindow.focus();
-                
-                // Esperar a que el contenido se cargue antes de imprimir
-                setTimeout(() => {
-                    printWindow.print();
-                    printWindow.close();
-                }, 250);
-            }
-
-            if (modalPrintBtn) modalPrintBtn.addEventListener('click', handlePrint);
-            // --- ! FIN: Funcionalidad de Imprimir ---
-
-
-            // --- INICIO: Ejecución Inicial ---
-            generateRecipeCards();
-            updateRecipeView(); // Para ocultar cabeceras si están vacías al inicio (aunque no debería pasar)
-
-        });
-        // --- FIN: Lógica de la Aplicación ---
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
